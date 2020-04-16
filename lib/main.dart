@@ -11,7 +11,7 @@ import 'package:mentorship_client/screens/login/login_screen.dart';
 import 'package:toast/toast.dart';
 
 void main() {
-  // Logs all BLoC transitions
+  // test action here
   BlocSupervisor.delegate = SimpleBlocDelegate();
   _setupLogging();
 
