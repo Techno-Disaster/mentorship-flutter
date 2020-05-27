@@ -54,8 +54,9 @@ class _MembersPageState extends State<_MembersPage> {
           pageNumber = (state.users.length ~/ 10);
           return ListView.builder(
             itemBuilder: (BuildContext context, int index) {
-              User user = state.users[index];
-              return index >= (state.users.length ~/ 10)
+              bool _reachedEnd=index>state.users.length -1;
+              User user = (!_reachedEnd)?state.users[index]:null;
+              return _reachedEnd
                   ? BottomLoader()
                   : InkWell(
                       onTap: () => _openMemberProfileScreen(context, user),
@@ -102,6 +103,7 @@ class BottomLoader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      padding: EdgeInsets.only(bottom:8),
       alignment: Alignment.center,
       child: Center(
         child: SizedBox(
