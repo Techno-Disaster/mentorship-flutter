@@ -28,21 +28,25 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     //ignore: close_sinks
-    ProfilePageBloc bloc = BlocProvider.of<ProfilePageBloc>(context)..add(ProfilePageShowed());
+    ProfilePageBloc bloc = BlocProvider.of<ProfilePageBloc>(context)
+      ..add(ProfilePageShowed());
 
-    _nameController..addListener(() => bloc.user.name = _nameController.text);
-    _bioController..addListener(() => bloc.user.bio = _bioController.text);
-    _slackController..addListener(() => bloc.user.slackUsername = _slackController.text);
-    _locationController..addListener(() => bloc.user.location = _locationController.text);
-    _occupationController..addListener(() => bloc.user.occupation = _occupationController.text);
-    _organizationController
-      ..addListener(() => bloc.user.organization = _organizationController.text);
-    _skillsController..addListener(() => bloc.user.skills = _skillsController.text);
-    _interestsController..addListener(() => bloc.user.interests = _interestsController.text);
+    // _nameController..addListener(() => bloc.user.name = _nameController.text);
+    // _bioController..addListener(() => bloc.user.bio = _bioController.text);
+    // _slackController..addListener(() => bloc.user.slackUsername = _slackController.text);
+    // _locationController..addListener(() => bloc.user.location = _locationController.text);
+    // _occupationController..addListener(() => bloc.user.occupation = _occupationController.text);
+    // _organizationController
+    //   ..addListener(() => bloc.user.organization = _organizationController.text);
+    // _skillsController..addListener(() => bloc.user.skills = _skillsController.text);
+    // _interestsController..addListener(() => bloc.user.interests = _interestsController.text);
+
     // _availableToMentor
     // _needsMentoring // TODO: Implement!
 
-    return BlocBuilder<ProfilePageBloc, ProfilePageState>(builder: (context, state) {
+    User user = User();
+    return BlocBuilder<ProfilePageBloc, ProfilePageState>(
+        builder: (context, state) {
       bool editing = false;
 
       if (state is ProfilePageEditing) {
@@ -56,7 +60,10 @@ class _ProfilePageState extends State<ProfilePage> {
             final bloc = BlocProvider.of<ProfilePageBloc>(context);
 
             if (state is ProfilePageEditing) {
-              bloc.add(ProfilePageEditSubmitted(BlocProvider.of<ProfilePageBloc>(context).user));
+              _formKey.currentState.save();
+              user.availableToMentor = _availableToMentor;
+              user.needsMentoring = _needsMentoring;
+              bloc.add(ProfilePageEditSubmitted(user));
             } else if (state is ProfilePageSuccess) {
               bloc.add(ProfilePageEditStarted());
             }
@@ -72,7 +79,8 @@ class _ProfilePageState extends State<ProfilePage> {
               context.showSnackBar(state.message);
             }
           },
-          child: BlocBuilder<ProfilePageBloc, ProfilePageState>(builder: (context, state) {
+          child: BlocBuilder<ProfilePageBloc, ProfilePageState>(
+              builder: (context, state) {
             if (state is ProfilePageSuccess) {
               _nameController.text = state.user.name;
               _usernameController.text = state.user.username;
@@ -148,6 +156,9 @@ class _ProfilePageState extends State<ProfilePage> {
                   child: TextFormField(
                     controller: _nameController,
                     enabled: editing,
+                    onSaved: (value) {
+                      user.name = value;
+                    },
                     textAlign: TextAlign.center,
                     decoration: const InputDecoration(
                       border: const UnderlineInputBorder(),
@@ -157,6 +168,9 @@ class _ProfilePageState extends State<ProfilePage> {
                 TextFormField(
                   controller: _usernameController,
                   enabled: false,
+                  onSaved: (value) {
+                    user.name = value;
+                  },
                   decoration: const InputDecoration(
                     labelText: "Username",
                     border: const UnderlineInputBorder(),
@@ -165,6 +179,9 @@ class _ProfilePageState extends State<ProfilePage> {
                 TextFormField(
                   controller: _emailController,
                   enabled: false,
+                  onSaved: (value) {
+                    user.email = value;
+                  },
                   decoration: const InputDecoration(
                     labelText: "Email",
                     border: const UnderlineInputBorder(),
@@ -177,9 +194,11 @@ class _ProfilePageState extends State<ProfilePage> {
                     Checkbox(
                       tristate: true,
                       value: _availableToMentor,
-                      onChanged: editing
-                          ? (value) => _availableToMentor = !_availableToMentor
-                          : (value) => null,
+                      onChanged: (value) {
+                        setState(() {
+                          if (editing) _availableToMentor = value;
+                        });
+                      },
                     ),
                   ],
                 ),
@@ -190,18 +209,46 @@ class _ProfilePageState extends State<ProfilePage> {
                     Checkbox(
                       tristate: true,
                       value: _needsMentoring,
-                      onChanged:
-                          editing ? (value) => _needsMentoring = !_needsMentoring : (value) => null,
+                      onChanged: (value) {
+                        setState(() {
+                          if (editing) _needsMentoring = value;
+                        });
+                      },
                     ),
                   ],
                 ),
-                _buildTextFormField("Bio", editing, _bioController),
-                _buildTextFormField("Slack username", editing, _slackController),
-                _buildTextFormField("Location", editing, _locationController),
-                _buildTextFormField("Occupation", editing, _occupationController),
-                _buildTextFormField("Organization", editing, _organizationController),
-                _buildTextFormField("Skills", editing, _skillsController),
-                _buildTextFormField("Interests", editing, _interestsController),
+                _buildTextFormField(
+                  "Bio",
+                  editing,
+                  _bioController,
+                  (value) {
+                    user.bio = value;
+                  },
+                ),
+                _buildTextFormField("Slack username", editing, _slackController,
+                    (value) {
+                  user.slackUsername = value;
+                }),
+                _buildTextFormField("Location", editing, _locationController,
+                    (value) {
+                  user.location = value;
+                }),
+                _buildTextFormField(
+                    "Occupation", editing, _occupationController, (value) {
+                  user.occupation = value;
+                }),
+                _buildTextFormField(
+                    "Organization", editing, _organizationController, (value) {
+                  user.organization = value;
+                }),
+                _buildTextFormField("Skills", editing, _skillsController,
+                    (value) {
+                  user.skills = value;
+                }),
+                _buildTextFormField("Interests", editing, _interestsController,
+                    (value) {
+                  user.interests = value;
+                }),
               ],
             ),
           )
@@ -210,10 +257,12 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  _buildTextFormField(String text, bool editing, TextEditingController controller) {
+  _buildTextFormField(String text, bool editing,
+      TextEditingController controller, Function(String) onSaved) {
     return TextFormField(
       controller: controller,
       enabled: editing,
+      onSaved: onSaved,
       decoration: InputDecoration(
         labelText: text,
         border: UnderlineInputBorder(),
