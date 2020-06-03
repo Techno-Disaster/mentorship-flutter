@@ -24,12 +24,17 @@ class _ProfilePageState extends State<ProfilePage> {
   final _interestsController = TextEditingController();
   bool _availableToMentor;
   bool _needsMentoring;
+  bool editing = false;
+
+  @override
+  void initState() {
+    context.bloc<ProfilePageBloc>()..add(ProfilePageShowed());
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
     //ignore: close_sinks
-    ProfilePageBloc bloc = BlocProvider.of<ProfilePageBloc>(context)
-      ..add(ProfilePageShowed());
 
     // _nameController..addListener(() => bloc.user.name = _nameController.text);
     // _bioController..addListener(() => bloc.user.bio = _bioController.text);
@@ -45,16 +50,13 @@ class _ProfilePageState extends State<ProfilePage> {
     // _needsMentoring // TODO: Implement!
 
     User user = User();
-    return BlocBuilder<ProfilePageBloc, ProfilePageState>(
-        builder: (context, state) {
-      bool editing = false;
-
-      if (state is ProfilePageEditing) {
-        editing = true;
-      }
-
-      return Scaffold(
-        floatingActionButton: FloatingActionButton(
+    return Scaffold(
+      floatingActionButton: BlocBuilder<ProfilePageBloc, ProfilePageState>(
+          builder: (context, state) {
+        if (state is ProfilePageEditing) {
+          editing = true;
+        }
+        return FloatingActionButton(
           onPressed: () {
             //ignore: close_sinks
             final bloc = BlocProvider.of<ProfilePageBloc>(context);
@@ -72,63 +74,68 @@ class _ProfilePageState extends State<ProfilePage> {
             editing ? Icons.save : Icons.edit,
             color: Colors.white,
           ),
-        ),
-        body: BlocListener<ProfilePageBloc, ProfilePageState>(
-          listener: (context, state) {
-            if (state.message != null) {
-              context.showSnackBar(state.message);
-            }
-          },
-          child: BlocBuilder<ProfilePageBloc, ProfilePageState>(
-              builder: (context, state) {
-            if (state is ProfilePageSuccess) {
-              _nameController.text = state.user.name;
-              _usernameController.text = state.user.username;
-              _emailController.text = state.user.email;
-              _bioController.text = state.user.bio;
-              _slackController.text = state.user.slackUsername;
-              _locationController.text = state.user.location;
-              _occupationController.text = state.user.occupation;
-              _organizationController.text = state.user.organization;
-              _skillsController.text = state.user.skills;
-              _interestsController.text = state.user.interests;
+        );
+      }),
+      body: BlocListener<ProfilePageBloc, ProfilePageState>(
+        listener: (context, state) {
+          if (state.message != null) {
+            context.showSnackBar(state.message);
+          }
+          if (state is ProfilePageEditing) {
+            _nameController.text = state.user.name;
+            _usernameController.text = state.user.username;
+            _emailController.text = state.user.email;
+            _bioController.text = state.user.bio;
+            _slackController.text = state.user.slackUsername;
+            _locationController.text = state.user.location;
+            _occupationController.text = state.user.occupation;
+            _organizationController.text = state.user.organization;
+            _skillsController.text = state.user.skills;
+            _interestsController.text = state.user.interests;
+            if (_availableToMentor == null)
               _availableToMentor = state.user.availableToMentor;
+            if (_needsMentoring == null)
+              _needsMentoring = state.user.needsMentoring;
+          }
+        },
+        child: BlocBuilder<ProfilePageBloc, ProfilePageState>(
+            builder: (context, state) {
+          if (state is ProfilePageSuccess) {
+            _nameController.text = state.user.name;
+            _usernameController.text = state.user.username;
+            _emailController.text = state.user.email;
+            _bioController.text = state.user.bio;
+            _slackController.text = state.user.slackUsername;
+            _locationController.text = state.user.location;
+            _occupationController.text = state.user.occupation;
+            _organizationController.text = state.user.organization;
+            _skillsController.text = state.user.skills;
+            _interestsController.text = state.user.interests;
+            if (_availableToMentor == null)
+              _availableToMentor = state.user.availableToMentor;
+            if (_needsMentoring == null)
               _needsMentoring = state.user.needsMentoring;
 
-              return _createPage(context, state.user, false);
-            }
-            if (state is ProfilePageEditing) {
-              _nameController.text = state.user.name;
-              _usernameController.text = state.user.username;
-              _emailController.text = state.user.email;
-              _bioController.text = state.user.bio;
-              _slackController.text = state.user.slackUsername;
-              _locationController.text = state.user.location;
-              _occupationController.text = state.user.occupation;
-              _organizationController.text = state.user.organization;
-              _skillsController.text = state.user.skills;
-              _interestsController.text = state.user.interests;
-              _availableToMentor = state.user.availableToMentor;
-              _needsMentoring = state.user.needsMentoring;
+            return _createPage(context, state.user, false);
+          }
+          if (state is ProfilePageEditing) {
+            return _createPage(context, state.user, true);
+          }
 
-              return _createPage(context, state.user, true);
-            }
+          if (state is ProfilePageFailure) {
+            return Text(state.message);
+          }
+          if (state is ProfilePageLoading) {
+            return LoadingIndicator();
+          }
 
-            if (state is ProfilePageFailure) {
-              return Text(state.message);
-            }
-            if (state is ProfilePageLoading) {
-              return LoadingIndicator();
-            }
-
-            if (state is ProfilePageInitial) {
-              return LoadingIndicator();
-            } else
-              return Text("Error: Unknown ProfilePageState");
-          }),
-        ),
-      );
-    });
+          if (state is ProfilePageInitial) {
+            return LoadingIndicator();
+          } else
+            return Text("Error: Unknown ProfilePageState");
+        }),
+      ),
+    );
   }
 
   Widget _createPage(BuildContext context, User user, bool editing) {
@@ -194,11 +201,13 @@ class _ProfilePageState extends State<ProfilePage> {
                     Checkbox(
                       tristate: true,
                       value: _availableToMentor,
-                      onChanged: (value) {
-                        setState(() {
-                          if (editing) _availableToMentor = value;
-                        });
-                      },
+                      onChanged: editing
+                          ? (value) {
+                              setState(() {
+                                _availableToMentor = value;
+                              });
+                            }
+                          : null,
                     ),
                   ],
                 ),
@@ -209,11 +218,13 @@ class _ProfilePageState extends State<ProfilePage> {
                     Checkbox(
                       tristate: true,
                       value: _needsMentoring,
-                      onChanged: (value) {
-                        setState(() {
-                          if (editing) _needsMentoring = value;
-                        });
-                      },
+                      onChanged: editing
+                          ? (value) {
+                              setState(() {
+                                _needsMentoring = value;
+                              });
+                            }
+                          : null,
                     ),
                   ],
                 ),
