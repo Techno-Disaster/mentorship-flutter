@@ -30,42 +30,6 @@ void main() {
     );
     authenticationBloc.close();
   });
-
-  group('AppStarted', () {
-    test('emits [uninitialized, unauthenticated] for invalid token', () {
-      final expectedResponse = [
-        AuthUninitialized(),
-        AuthUnauthenticated(),
-      ];
-
-      when(userRepository.getToken()).thenAnswer((_) => Future.value(null));
-
-      expectLater(
-        authenticationBloc,
-        emitsInOrder(expectedResponse),
-      );
-
-      authenticationBloc.add(AppStarted());
-    });
-  });
-  group('LoggedIn', () {
-    test('emits [uninitialized, loading, authenticated] when token is persisted', () {
-      final expectedResponse = [
-        AuthUninitialized(),
-        AuthInProgress(),
-        AuthAuthenticated(),
-      ];
-
-      expectLater(
-        authenticationBloc,
-        emitsInOrder(expectedResponse),
-      );
-
-      authenticationBloc.add(JustLoggedIn(
-        'instance.token',
-      ));
-    });
-  });
   group('LoggedOut', () {
     test('emits [uninitialized, loading, unauthenticated] when token is deleted', () {
       final expectedResponse = [
