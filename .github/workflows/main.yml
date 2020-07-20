@@ -38,4 +38,10 @@ jobs:
       - run: echo "::add-path::$GITHUB_WORKSPACE/_flutter/bin"
       - run: flutter pub get
         working-directory: ./
-      - run: flutter build appbundle
+      - run: flutter build apk
+        
+      - name: Publish 
+      - uses: actions/upload-artifact@v2
+        with:
+          name: mentorship
+          path: build/app/outputs/apk/release/app-release.apk
