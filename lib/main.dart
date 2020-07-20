@@ -16,7 +16,7 @@ void main() {
   _setupLogging();
 
   // Providing app-wide auth bloc, so that app state changes immediately when
-  // auth state changes.
+  // auth state changes.Test store
   runApp(
     BlocProvider<AuthBloc>(
       create: (context) => AuthBloc(AuthRepository.instance)..add(AppStarted()),
