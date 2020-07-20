@@ -39,8 +39,7 @@ jobs:
       - run: flutter pub get
         working-directory: ./
       - run: flutter build apk
-        
-      - name: Publish 
+
       - uses: actions/upload-artifact@v2
         with:
           name: mentorship
